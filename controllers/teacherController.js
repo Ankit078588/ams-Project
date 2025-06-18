@@ -2,6 +2,7 @@ const bcrypt = require('bcrypt');
 const jwt = require('jsonwebtoken');
 const Teacher = require('../models/teacher');
 const Classroom = require('../models/classroom');
+const Attendance = require('../models/attendance');
 const { generateUniqueTeacherId } = require('../utils/generateTeacherId');
 const { generateUniqueClassroomId } = require('../utils/generateClassroomId');
 
@@ -96,29 +97,99 @@ const createClassroom = async (req, res) => {
 
 // Start Attendance
 const startAttendance = async (req, res) => {
-  const { latitude, longitude } = req.body;
-  console.log('Latitude recieved: ', latitude);
-  console.log('Longitude recieved: ', longitude);
-  
+  try {
+    const { latitude, longitude, classroom_id } = req.body;
+    const teacher_id = req.user.teacher_id;                   // From JWT middleware
 
-  // if (!latitude || !longitude) {
-  //     return res.status(400).send('Latitude and longitude are required.');
-  // }
+    if (!latitude || !longitude || !classroom_id) {
+      return res.status(400).json({ msg: 'Latitude, longitude, and classroom ID are required' });
+    }
+    console.log('Latitude recieved: ', latitude);
+    console.log('Longitude recieved: ', longitude);
 
-  // const attendanceSession = new Attendance({
-  //     teacherId: req.user._id, // Assuming user is authenticated
-  //     teacherLocation: { latitude, longitude },
-  //     startTime: new Date(),
-  // });
+    // 1. Validate classroom
+    const classroom = await Classroom.findOne({ classroom_id, teacher_id });
+    if (!classroom) {
+      return res.status(404).json({ msg: 'Classroom not found or not owned by this teacher' });
+    }
 
-  // await attendanceSession.save();
-  // res.redirect('/teacher/dashboard');
-}
+    // 2. Check if attendance already started for today (optional but practical)
+    const today = new Date();
+    const startOfDay = new Date(today.setHours(0, 0, 0, 0));
+    const endOfDay = new Date(today.setHours(23, 59, 59, 999));
+
+    const alreadyStarted = await Attendance.findOne({
+      classroom_id,
+      teacher_id,
+      date: { $gte: startOfDay, $lte: endOfDay }
+    });
+
+    if (alreadyStarted) {
+      return res.status(400).json({ msg: 'Attendance already started for today in this classroom.' });
+    }
+
+    // 3. Create attendance session
+    const attendance = new Attendance({
+      classroom_id,
+      teacher_id,
+      teacherLocation: { latitude, longitude },
+      startTime: new Date(),
+    });
+
+    await attendance.save();
+
+    return res.status(201).json({ msg: 'Attendance session started', attendance });
+  } catch (err) {
+    console.error(err);
+    res.status(500).json({ msg: 'Server Error', error: err.message });
+  }
+};
+
+
+// End Attendance
+const endAttendance = async (req, res) => {
+  try {
+    const { classroom_id } = req.body;
+    const teacher_id = req.user.teacher_id;           // Extracted from JWT middleware
+
+    if (!classroom_id) {
+      return res.status(400).json({ msg: 'Classroom ID is required' });
+    }
+
+    // 1. Find today's active attendance session
+    const today = new Date();
+    const startOfDay = new Date(today.setHours(0, 0, 0, 0));
+    const endOfDay = new Date(today.setHours(23, 59, 59, 999));
+
+    const attendanceSession = await Attendance.findOne({
+      classroom_id,
+      teacher_id,
+      date: { $gte: startOfDay, $lte: endOfDay },
+      endTime: { $exists: false }
+    });
+
+    if (!attendanceSession) {
+      return res.status(404).json({ msg: 'Active attendance session not found for today' });
+    }
+
+    // 2. Set endTime to now
+    attendanceSession.endTime = new Date();
+    await attendanceSession.save();
+
+    return res.status(200).json({ msg: 'Attendance session ended', attendance: attendanceSession });
+  } catch (err) {
+    console.error(err);
+    res.status(500).json({ msg: 'Server Error', error: err.message });
+  }
+};
+
+
 
 
 module.exports = {
   registerTeacher,
   loginTeacher,
   createClassroom,
-  startAttendance
+  startAttendance,
+  endAttendance
 };

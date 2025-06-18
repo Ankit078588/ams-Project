@@ -8,7 +8,8 @@ router.post('/register', teacherController.registerTeacher);
 router.post('/login', teacherController.loginTeacher);
 
 router.post('/create-new-classroom', isTeacherMiddleware, teacherController.createClassroom);
-router.post('/teacher/start-attendance', isTeacherMiddleware, teacherController.startAttendance);
+router.post('/start-attendance', isTeacherMiddleware, teacherController.startAttendance);
+router.post('/end-attendance', isTeacherMiddleware, teacherController.endAttendance);
 
 
 module.exports = router;

@@ -46,7 +46,6 @@ const isAdminMiddleware = (req, res, next) => {
 };
 
 
-
 // Teacher Middleware
 const isTeacherMiddleware = (req, res, next) => {
     try {

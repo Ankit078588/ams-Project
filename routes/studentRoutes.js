@@ -8,6 +8,7 @@ router.post('/register', studentController.registerStudent);
 router.post('/login', studentController.loginStudent);
 
 router.post('/join-new-classroom', isStudentMiddleware, studentController.joinClassroom);
+router.post('/mark-attendance', isStudentMiddleware, studentController.markAttendance);
 
 
 
