@@ -15,4 +15,6 @@ const generateUniqueTeacherId = async () => {
 };
 
 
-module.exports = generateUniqueTeacherId;
+module.exports = {
+  generateUniqueTeacherId
+};

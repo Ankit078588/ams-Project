@@ -1,21 +1,25 @@
-const mongoose = require('mongoose');
+const mongoose = require("mongoose");
 
 
-const AttendanceSchema = new mongoose.Schema({
-    teacherId: mongoose.Schema.Types.ObjectId,
+const attendanceSchema = new mongoose.Schema(
+  {
+    classroom_id: { type: String, required: true },   // same format as above
+    teacher_id: { type: String, required: true },     // 8-digit teacher_id
+    date: { type: Date, default: Date.now },
     teacherLocation: {
-        latitude: Number,
-        longitude: Number,
+      latitude: Number,
+      longitude: Number,
     },
-    students: [
-        {
-            studentId: mongoose.Schema.Types.ObjectId,
-            time: Date,
-        },
-    ],
     startTime: Date,
     endTime: Date,
-});
+
+    present_students: [{
+        student_id: { type: String, required: true },
+    }],
+  },
+  { timestamps: true }
+);
 
 
-module.exports = mongoose.model('Attendance', AttendanceSchema);
+
+module.exports = mongoose.model("Attendance", attendanceSchema);

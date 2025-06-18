@@ -1,4 +1,5 @@
 const mongoose = require('mongoose');
+const bcrypt = require('bcrypt');
 
 
 const studentSchema = new mongoose.Schema({
@@ -9,7 +10,7 @@ const studentSchema = new mongoose.Schema({
   role: { type: String, default: 'student' },
 
   student_id: { type: String, minlength: 12, unique: true},
-  joined_classes: [{
+  joined_classrooms: [{
     type: mongoose.Schema.Types.ObjectId,
     ref: 'Classroom'
   }]

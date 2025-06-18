@@ -10,7 +10,7 @@ const teacherSchema = new mongoose.Schema({
   role: { type: String, default: 'teacher' },
   
   teacher_id: { type: String, required: true, minlength: 8, unique: true },
-  joined_classroom: [{
+  created_classrooms: [{
     type: mongoose.Schema.Types.ObjectId,
     ref: 'Classroom'
   }],

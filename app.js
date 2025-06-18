@@ -5,7 +5,6 @@ require('./config/db_connection')
 const PORT = 3000;
 
 
-
 const app = express();
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
@@ -14,8 +13,10 @@ app.use(cors());
 
 const adminRoutes = require('./routes/adminRoutes');
 const teacherRoutes = require('./routes/teacherRoutes');
+const studentRoutes = require('./routes/studentRoutes');
 app.use('/api/admin', adminRoutes);
 app.use('/api/teacher', teacherRoutes);
+app.use('/api/student', studentRoutes);
 
 
 
@@ -23,25 +24,7 @@ app.use('/api/teacher', teacherRoutes);
 
 
 
-app.post('/teacher/start-attendance', async (req, res) => {
-    const { latitude, longitude } = req.body;
-    console.log('Latitude recieved: ', latitude);
-    console.log('Longitude recieved: ', longitude);
-    
 
-    if (!latitude || !longitude) {
-        return res.status(400).send('Latitude and longitude are required.');
-    }
-
-    const attendanceSession = new Attendance({
-        teacherId: req.user._id, // Assuming user is authenticated
-        teacherLocation: { latitude, longitude },
-        startTime: new Date(),
-    });
-
-    await attendanceSession.save();
-    res.redirect('/teacher/dashboard');
-});
 app.post('/student/mark-attendance', async (req, res) => {
     const { latitude, longitude } = req.body;
 
