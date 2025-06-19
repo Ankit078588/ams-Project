@@ -5,6 +5,7 @@ const Classroom = require('../models/classroom');
 const Attendance = require('../models/attendance');
 const { generateUniqueTeacherId } = require('../utils/generateTeacherId');
 const { generateUniqueClassroomId } = require('../utils/generateClassroomId');
+const Community = require('../models/community');
 
 
 
@@ -32,6 +33,14 @@ const registerTeacher = async (req, res) => {
     });
 
     await newTeacher.save();
+
+    // creating teacher Community
+    const community = new Community({
+      name: `${name}'s Community`,
+      teacher: newTeacher._id
+    });
+    await community.save();
+
     res.status(201).json({ msg: 'Teacher registered successfully', teacher: newTeacher });
   } catch (err) {
     console.error(err);
@@ -184,6 +193,79 @@ const endAttendance = async (req, res) => {
 };
 
 
+// Create New Community Post
+const createNewPost = async (req, res) => {
+  try {
+    const { content } = req.body;
+    const teacherId = req.user.id;
+
+    // console.log(content);
+    // console.log(teacherId);
+    // console.log(req.file);
+    
+
+    if (!content && !req.file) {
+      return res.status(400).json({ msg: 'Text or file is required' });
+    }
+
+    // Find teacher's community
+    const community = await Community.findOne({ teacher: teacherId });
+    if (!community) {
+      return res.status(404).json({ msg: 'Community not found for this teacher' });
+    }
+
+    // Creating new Post
+    let post = {
+      content,
+      postedAt: new Date(),
+    };
+
+    if (req.file) {
+      post.file = {
+        buffer: req.file.buffer,
+        mimetype: req.file.mimetype,
+        filename: req.file.originalname,
+      };
+    }
+
+    community.posts.push(post);
+    await community.save();
+
+    res.status(201).json({ msg: 'Post created successfully', post });
+  } catch (err) {
+    console.error(err);
+    res.status(500).json({ msg: 'Server Error', error: err.message });
+  }
+};
+
+
+// GET all community posts -> 
+const getAllTeacherPosts = async (req, res) => {
+  try {
+    const { teacherId } = req.params;
+
+    // 1. Find the community linked to the teacher
+    const community = await Community.findOne({ teacher: teacherId });
+
+    if (!community) {
+      return res.status(404).json({ msg: 'No community found for this teacher' });
+    }
+
+    // 2. Return the posts
+    return res.status(200).json({
+      msg: 'Posts fetched successfully',
+      posts: community.posts,
+    });
+  } catch (err) {
+    console.error(err);
+    return res.status(500).json({ msg: 'Server Error', error: err.message });
+  }
+};
+
+
+
+
+
 
 
 module.exports = {
@@ -191,5 +273,7 @@ module.exports = {
   loginTeacher,
   createClassroom,
   startAttendance,
-  endAttendance
+  endAttendance,
+  createNewPost,
+  getAllTeacherPosts
 };

@@ -1,6 +1,7 @@
 const Attendance = require('../models/attendance');
 const Classroom = require('../models/classroom');
 const Student = require('../models/student');
+const Community = require('../models/community');
 const bcrypt = require('bcrypt');
 const jwt = require('jsonwebtoken');
 const { generateUniqueStudentId } = require('../utils/generateStudentId');
@@ -199,10 +200,49 @@ const markAttendance = async (req, res) => {
 };
 
 
+// join Community
+const joinCommunity = async (req, res) => {
+  try {
+    const { communityId } = req.body;  
+    const studentId = req.user.id;     // via JWT middleware
+
+    if (!communityId) {
+      return res.status(400).json({ msg: 'Community ID is required' });
+    }
+
+    // 1. Check if community exists
+    const community = await Community.findById(communityId);
+    if (!community) {
+      return res.status(404).json({ msg: 'Community not found' });
+    }
+
+    // 2. Check if student already a member
+    if (community.students.includes(studentId)) {
+      return res.status(400).json({ msg: 'You have already joined this community' });
+    }
+
+    // 3. Add student to community
+    community.students.push(studentId);
+    await community.save();
+
+    // 4. Add community to student
+    const student = await Student.findById(studentId);
+    student.joined_communities.push(communityId);
+    await student.save();
+
+    return res.status(200).json({ msg: 'Joined community successfully' });
+  } catch (err) {
+    console.error(err);
+    return res.status(500).json({ msg: 'Server Error', error: err.message });
+  }
+};
+
+
 
 module.exports = {
   registerStudent,
   loginStudent,
   joinClassroom,
-  markAttendance
+  markAttendance,
+  joinCommunity,
 }

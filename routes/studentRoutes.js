@@ -9,6 +9,7 @@ router.post('/login', studentController.loginStudent);
 
 router.post('/join-new-classroom', isStudentMiddleware, studentController.joinClassroom);
 router.post('/mark-attendance', isStudentMiddleware, studentController.markAttendance);
+router.post('/join-community', isStudentMiddleware, studentController.joinCommunity);
 
 
 

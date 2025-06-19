@@ -13,6 +13,10 @@ const studentSchema = new mongoose.Schema({
   joined_classrooms: [{
     type: mongoose.Schema.Types.ObjectId,
     ref: 'Classroom'
+  }],
+  joined_communities: [{
+    type: mongoose.Schema.Types.ObjectId,
+    ref: 'Community'
   }]
 }, { timestamps: true });
 
